@@ -244,7 +244,7 @@ elif [ "$1" = stage ]; then
 
     elif [ "$2" = stop ]; then
 	check_dir "$STAGING_DIR" "$STAGING_BRANCH" || abend "staging directory looks fishy, I won't remove that"
-	rm -r "$STAGING_DIR"
+	rm -rf "$STAGING_DIR"
 
     else
 	show_help
