@@ -32,7 +32,7 @@ abend()
 show_help()
 {
     cat <<EOF
-gbdt - git based deploy tool
+gbdt - git based deployment tool
 
 usage:
   gbdt [-v] <env> init           - initialize environment with CURRENT(!) state
