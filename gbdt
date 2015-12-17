@@ -37,10 +37,10 @@ gbdt - git based deploy tool
 usage:
   gbdt [-v] <env> init           - initialize environment with CURRENT(!) state
   gbdt [-v] <env> deploy <tag>   - deploys tagged state to environment
-  gbdt [-v] <env> check          - show status of an environment
+  gbdt [-v] <env> status         - show status of an environment
   gbdt [-v] stage deploy         - deploys CURRENT state to staging
   gbdt [-v] stage stop           - remove staging environment
-  gbdt [-v] check                - show status of all environments
+  gbdt [-v] status               - show status of all environments
 
   <env> is an environment, see below
   <tag> is a git tag
@@ -220,7 +220,7 @@ elif [ "$1" = stage ]; then
 
     fi
     
-elif [ "$1" = check ]; then
+elif [ "$1" = status ]; then
 
     import_config
     
