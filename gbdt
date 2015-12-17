@@ -1,0 +1,194 @@
+#!/bin/bash
+set -e
+
+# verbose mode - initialize immediately if needed
+VERBOSE=0
+if [ "$1" = '-vv' ]; then
+    shift
+    VERBOSE=1
+    set -x
+fi
+if [ "$1" = '-v' ]; then
+    VERBOSE=1
+    shift
+    if [ "$1" = '-v' ]; then
+	set -x
+	shift
+    fi
+fi
+
+# subroutines
+#############################################################
+
+# error out with a message on stderr (ABnormal ENDing)
+# $*: the message
+abend()
+{
+    echo ERROR: "$*" >&2
+    exit 1
+}
+
+# show usage end exit
+show_help()
+{
+    cat <<EOF
+gbdt - git based deploy tool
+
+usage:
+  gbdt [-v] <env> init           - initialize environment with CURRENT(!) state
+  gbdt [-v] <env> deploy <tag>   - deploys tagged state to environment
+  gbdt [-v] <env> check          - show status of an environment
+  gbdt [-v] stage deploy         - deploys CURRENT state to staging
+  gbdt [-v] stage stop           - remove staging environment
+  gbdt [-v] check                - show status of all environments
+
+  <env> is an environment, see below
+  <tag> is a git tag
+
+environments:
+  prod    - production
+  stage   - staging
+EOF
+    exit 0
+}
+
+# check directory for a specific branch
+# TODO/FIXME: also check the repository, refs/heads/master could be anything...
+# $1: target_dir
+# $2: branch
+# return: 0 = ok, 1 = different branch (see $RET_BRANCH), 2 = directory does not exist, 3 = directory contains no git repository
+check_dir()
+{
+    DIR="$1"
+    BRANCH="$2"
+
+    [ -d "$DIR" ] || return 2
+    [ -d "$DIR"/.git ] || return 3
+
+    CURRENT_BRANCH="$(git -C "$DIR" symbolic-ref -q HEAD)"
+    if [ "$CURRENT_BRANCH" != "refs/heads/$BRANCH" ]; then
+	RET_BRANCH="$CURRENT_BRANCH"
+	return 1
+    fi
+
+    return 0
+}
+
+
+# initialize a repository
+# $1: target_dir
+# $2: branch
+init_dir()
+{
+    DIR="$1"
+    BRANCH="$2"
+
+    if [ -d "$DIR"/.git ]; then
+	check_dir "$DIR" "$BRANCH" || abend  "\`$DIR' already contains a git checkout, but the current branch differs: want \`$BRANCH' but got \`$RET_BRANCH'"
+	echo "directory \`$DIR' already exists with correct branch \`$BRANCH'"
+	return 0
+    fi
+
+    [ -d "$DIR" ] || mkdir -p "$DIR"
+
+    git clone -b "$BRANCH" "$GIT_REPO" "$DIR"
+    echo "directory \`$DIR' initialized with branch \`$BRANCH'"
+}
+
+
+# check environment and print results to stdout
+# $1: target_dir
+# $2: branch
+# $3: environment_name
+check_environment()
+{
+    DIR="$1"
+    BRANCH="$2"
+    ENVIRONMENT="$3"
+
+    if check_dir "$DIR" "$BRANCH"; then
+	CURRENT_BRANCH="$(git -C "$DIR" symbolic-ref -q HEAD)"
+	TAG="$(cd "$DIR"; git describe --tags --always)"
+	STATE="branch \`$CURRENT_BRANCH' at \`$TAG'"
+
+    else
+	case $? in
+	    1)
+		STATE="wrong branch \`$RET_BRANCH' checked out"
+		;;
+	    2)
+		STATE="directory \`$DIR' does not exist"
+		;;
+	    3)
+		STATE="directory \`$DIR' is no git repository"
+		;;
+	    *)
+		abend 'unknown return code from check_dir() - b0rk b0rk b0rk'
+		;;
+	esac
+    fi
+
+    if [ $VERBOSE = 1 ]; then
+	echo $ENVIRONMENT
+	echo "  state:   $STATE"
+	echo "  dir:     $DIR"
+	echo "  branch:  $BRANCH"
+	echo "  repo:    $GIT_REPO"
+	echo
+    else
+	echo "$ENVIRONMENT $STATE"
+    fi
+}
+
+
+# import configuration
+import_config()
+{
+    [ -r ~/.gbdt ] || abend "no configuration in \`~/.gbdt' found"
+    source ~/.gbdt
+}
+
+
+# main part
+#############################################################
+
+# figure out what to do
+if [ "$1" = prod ]; then
+
+    import_config
+    
+    if [ "$2" = init ]; then
+	init_dir "$PRODUCTION_DIR" "$PRODUCTION_BRANCH"
+
+    else
+	show_help
+
+    fi
+    
+elif [ "$1" = stage ]; then
+
+    import_config
+    
+    if [ "$2" = init ]; then
+	init_dir "$STAGING_DIR" "$STAGING_BRANCH"
+
+    elif [ "$2" = stop ]; then
+	check_dir "$STAGING_DIR" "$STAGING_BRANCH" || abend "staging directory looks fishy, I won't remove that"
+	rm -r "$STAGING_DIR"
+
+    else
+	show_help
+
+    fi
+    
+elif [ "$1" = check ]; then
+
+    import_config
+    
+    check_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production: '
+    check_environment "$STAGING_DIR"    "$STAGING_BRANCH"    'staging:    '
+
+else
+    show_help
+    
+fi
