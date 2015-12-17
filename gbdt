@@ -127,7 +127,7 @@ check_environment()
 
     if check_dir "$DIR" "$BRANCH"; then
 	CURRENT_BRANCH="$(git -C "$DIR" symbolic-ref --short -q HEAD || echo "$BRANCH" '(detached head)')"
-	TAG="$(cd "$DIR"; git describe --tags --always)"
+	TAG="$(git -C "$DIR" describe --tags --always)"
 	STATE="branch \`$CURRENT_BRANCH' at \`$TAG'"
 
     else
@@ -170,11 +170,8 @@ update_environment()
 
     check_dir "$DIR" || abend "directory \`$DIR' looks fishy"
 
-    (
-	cd "$DIR"
-	git fetch
-	git checkout "$REF"
-    )
+    git -C "$DIR" fetch
+    git -C "$DIR" checkout "$REF"
 }
 
 
