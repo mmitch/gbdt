@@ -32,14 +32,18 @@ abend()
 show_help()
 {
     cat <<EOF
+
 gbdt - git based deployment tool
 
 usage:
   gbdt [-v] <env> init           - initialize environment with CURRENT(!) state
   gbdt [-v] <env> deploy <tag>   - deploys tagged state to environment
   gbdt [-v] <env> status         - show status of an environment
+  gbdt [-v] <env> tags           - show available <tags> in an environment
+
   gbdt [-v] stage deploy         - deploys CURRENT state to staging
   gbdt [-v] stage stop           - remove staging environment
+
   gbdt [-v] status               - show status of all environments
 
   <env> is an environment, see below
@@ -48,6 +52,7 @@ usage:
 environments:
   prod    - production
   stage   - staging
+
 EOF
     exit 0
 }
@@ -156,18 +161,34 @@ check_environment()
 
 
 # update environment
+# $1: target_dir
+# $2: ref checkout
 update_environment()
 {
     DIR="$1"
-    TAG="$2"
+    REF="$2"
 
     check_dir "$DIR" || abend "directory \`$DIR' looks fishy"
 
     (
 	cd "$DIR"
 	git fetch
-	git checkout "$TAG"
+	git checkout "$REF"
     )
+}
+
+
+# show tags
+# $1: target_dir
+# $2: branch
+show_tags()
+{
+    DIR="$1"
+    BRANCH="$2"
+
+    check_dir "$DIR" || abend "directory \`$DIR' looks fishy"
+
+    LANG=C git -C "$DIR" log --decorate --pretty=format:%d "$BRANCH" | fgrep tag:
 }
 
 
@@ -198,6 +219,9 @@ if [ "$1" = prod ]; then
     elif [ "$2" = status ]; then
 	check_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production'
 
+    elif [ "$2" = tags ]; then
+	show_tags "$PRODUCTION_DIR" "$PRODUCTION_BRANCH"
+
     else
 	show_help
 
@@ -217,6 +241,9 @@ elif [ "$1" = stage ]; then
 
     elif [ "$2" = status ]; then
 	check_environment "$STAGING_DIR" "$STAGING_BRANCH" 'staging:'
+
+    elif [ "$2" = tags ]; then
+	show_tags "$STAGING_DIR" "$STAGING_BRANCH"
 
     elif [ "$2" = stop ]; then
 	check_dir "$STAGING_DIR" "$STAGING_BRANCH" || abend "staging directory looks fishy, I won't remove that"
