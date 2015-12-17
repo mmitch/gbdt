@@ -194,6 +194,9 @@ if [ "$1" = prod ]; then
 	[ "$TAG" ] || abend "no <tag> given"
 	update_environment "$PRODUCTION_DIR" "$TAG"
 
+    elif [ "$2" = status ]; then
+	check_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production'
+
     else
 	show_help
 
@@ -210,6 +213,9 @@ elif [ "$1" = stage ]; then
 	TAG="$3"
 	[ "$TAG" ] || TAG="$STAGING_BRANCH"
 	update_environment "$STAGING_DIR" "$TAG"
+
+    elif [ "$2" = status ]; then
+	check_environment "$STAGING_DIR" "$STAGING_BRANCH" 'staging:'
 
     elif [ "$2" = stop ]; then
 	check_dir "$STAGING_DIR" "$STAGING_BRANCH" || abend "staging directory looks fishy, I won't remove that"
