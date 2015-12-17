@@ -126,7 +126,7 @@ check_environment()
     ENVIRONMENT="$3"
 
     if check_dir "$DIR" "$BRANCH"; then
-	CURRENT_BRANCH="$(git -C "$DIR" symbolic-ref -q HEAD)"
+	CURRENT_BRANCH="$(git -C "$DIR" symbolic-ref --short -q HEAD || echo "$BRANCH" '(detached head)')"
 	TAG="$(cd "$DIR"; git describe --tags --always)"
 	STATE="branch \`$CURRENT_BRANCH' at \`$TAG'"
 
