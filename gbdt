@@ -119,7 +119,7 @@ init_dir()
 
     [ -d "$DIR" ] || mkdir -p "$DIR"
 
-    git clone -b "$BRANCH" "$GIT_REPO" "$DIR"
+    git clone --branch "$BRANCH" --single-branch "$GIT_REPO" "$DIR"
     echo "directory \`$DIR' initialized with branch \`$BRANCH'"
 }
 
