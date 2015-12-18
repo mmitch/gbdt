@@ -1,4 +1,13 @@
 #!/bin/bash
+#
+# gbdt - git based deployment tool
+#
+# Copyright (C) 2015  Christian Garbs <mitch@cgarbs.de>
+# Licensed under GNU GPL v3 or later.
+#
+# see https://github.com/mmitch/gbdt
+#
+
 set -e
 
 # verbose mode - initialize immediately if needed
