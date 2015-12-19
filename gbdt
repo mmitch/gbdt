@@ -37,6 +37,7 @@ abend()
     exit 1
 }
 
+
 # show usage end exit
 show_help()
 {
@@ -65,6 +66,17 @@ environments:
 EOF
     exit 0
 }
+
+
+# empty post-deployment hook, can be overridden in ~/.gbdt
+# $1: target_dir
+# $2: branch
+# $3: environment_name
+post_deploy()
+{
+    :
+}
+
 
 # check directory for a git repository
 # TODO/FIXME: also check the repository, refs/heads/master could be anything...
@@ -106,10 +118,12 @@ check_branch()
 # initialize a repository
 # $1: target_dir
 # $2: branch
+# $3: environment_name
 init_dir()
 {
     DIR="$1"
     BRANCH="$2"
+    ENVIRONMENT="$3"
 
     if [ -d "$DIR"/.git ]; then
 	check_dir "$DIR" "$BRANCH" || abend  "\`$DIR' already contains a git checkout, but the current branch differs: want \`$BRANCH' but got \`$RET_BRANCH'"
@@ -120,6 +134,9 @@ init_dir()
     [ -d "$DIR" ] || mkdir -p "$DIR"
 
     git clone --branch "$BRANCH" --single-branch "$GIT_REPO" "$DIR"
+
+    post_deploy "$DIR" "$BRANCH" "$ENVIRONMENT"
+
     echo "directory \`$DIR' initialized with branch \`$BRANCH'"
 }
 
@@ -171,16 +188,22 @@ check_environment()
 
 # update environment
 # $1: target_dir
-# $2: ref checkout
+# $2: branch
+# $3: environment_name
+# $4: ref checkout
 update_environment()
 {
     DIR="$1"
-    REF="$2"
+    BRANCH="$2"
+    ENVIRONMENT="$3"
+    REF="$4"
 
     check_dir "$DIR" || abend "directory \`$DIR' looks fishy"
 
     git -C "$DIR" pull --ff-only
     git -C "$DIR" checkout "$REF"
+
+    post_deploy "$DIR" "$BRANCH" "$ENVIRONMENT"
 }
 
 
@@ -215,12 +238,12 @@ if [ "$1" = prod ]; then
     import_config
     
     if [ "$2" = init ]; then
-	init_dir "$PRODUCTION_DIR" "$PRODUCTION_BRANCH"
+	init_dir "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production'
 
     elif [ "$2" = deploy ]; then
 	TAG="$3"
 	[ "$TAG" ] || abend "no <tag> given"
-	update_environment "$PRODUCTION_DIR" "$TAG"
+	update_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production' "$TAG"
 
     elif [ "$2" = status ]; then
 	check_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production'
@@ -238,12 +261,12 @@ elif [ "$1" = stage ]; then
     import_config
     
     if [ "$2" = init ]; then
-	init_dir "$STAGING_DIR" "$STAGING_BRANCH"
+	init_dir "$STAGING_DIR" "$STAGING_BRANCH" 'staging'
 
     elif [ "$2" = deploy ]; then
 	TAG="$3"
 	[ "$TAG" ] || TAG="$STAGING_BRANCH"
-	update_environment "$STAGING_DIR" "$TAG"
+	update_environment "$STAGING_DIR" "$STAGING_BRANCH" 'staging' "$TAG"
 
     elif [ "$2" = status ]; then
 	check_environment "$STAGING_DIR" "$STAGING_BRANCH" 'staging:'

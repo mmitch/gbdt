@@ -52,7 +52,8 @@ how?
    subfolders).  The repository should have separate branches for the
    production environment and the staging environment.
 
-2. Create `~/.gbdt` containing the following five keys:
+2. Create `~/.gbdt` containing the following: (look out, the file gets
+   sourced, so don't put anything like `rm -rf` in it!)
 
    * `GIT_REPO` - the git repository to use,
      e.g. `ssh://somehost/home/foo/git/website.git`
@@ -70,6 +71,20 @@ how?
 
    * `STAGING_BRANCH` - the branch to use for the staging
      environment checkout, e.g. `staging`
+
+   * `post_deploy()` (optional) - a shell function to be run after
+     every deployment, see this example:
+
+    # post-deployment hook
+    # $1: target_dir
+    # $2: branch
+    # $3: environment_name
+    post_deploy()
+    {
+	    # disable Apache access to the .git subdirectory
+        cd "$1"
+        chmod 700 .git
+    }
 
 3. Initialize the production environment with `gbdt prod init`
 
@@ -113,11 +128,12 @@ gbdt will propably evolve.
 
 ### possible technical improvements
 
-* support simple post-deployment scripting
-  * e.g. for hiding .git directory in a checkout
 * switch to getopt option parsing
   * document all options (`-vv` and `-v -v` currently missing)
   * provide -c option to select different configuration files
+* make real use of the verbose settings
+  * add more diagnostic output
+  * only show diagnostic output in verbose mode
 * remove init command
   * deploy command could initialize automatically
   * this would also prevent initializing production without a proper
