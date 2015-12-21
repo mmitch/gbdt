@@ -275,6 +275,7 @@ elif [ "$1" = stage ]; then
 	show_tags "$STAGING_DIR" "$STAGING_BRANCH"
 
     elif [ "$2" = stop ]; then
+	[ -d "$STAGING_DIR" ] || abend "staging directory does not exist"
 	check_dir "$STAGING_DIR" "$STAGING_BRANCH" || abend "staging directory looks fishy, I won't remove that"
 	rm -rf "$STAGING_DIR"
 
