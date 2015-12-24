@@ -67,7 +67,12 @@ how?
       server - after testing I can stop the staging environment)
 
    * `GIT_BRANCH` (optional) - the branch to use for the checkouts to
-     both environments (default is unset is `master`)
+     both environments (default if unset is `master`)
+
+   * `TAG_REGEXP` (optional) - an extended regular expression that
+     filters the tags shown on `gbdt tags' and prevents any tags not
+     matching to be deployed to production (deployment to staging is
+     still possible) (default if unset is `.`, matching everything)
 
    * `post_deploy()` (optional) - a shell function to be run after
      every deployment, see this example:

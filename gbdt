@@ -201,7 +201,7 @@ update_environment()
 # show tags
 show_tags()
 {
-    git ls-remote --tags "$GIT_REPO" | sed 's,^.*refs/tags/,,'
+    git ls-remote --tags "$GIT_REPO" | sed 's,^.*refs/tags/,,' | grep -E "$TAG_REGEXP"
 }
 
 
@@ -215,6 +215,7 @@ import_config()
     [ "$STAGING_DIR" ]    || abend 'no $STAGING_DIR given in config'
     [ "$GIT_REPO" ]       || abend 'no $GIT_REPO given in config'
     [ "$GIT_BRANCH" ]     || GIT_BRANCH=master
+    [ "$TAG_REGEXP" ]     || TAG_REGEXP=.
 }
 
 
@@ -232,6 +233,7 @@ if [ "$1" = prod ]; then
     elif [ "$2" = deploy ]; then
 	TAG="$3"
 	[ "$TAG" ] || abend "no <tag> given"
+	[[ "$TAG" =~ $TAG_REGEXP ]] || abend "tag \`$TAG' does not match \`$TAG_REGEXP'"
 	update_environment "$PRODUCTION_DIR" 'production' "$TAG"
 
     elif [ "$2" = status ]; then
