@@ -227,7 +227,7 @@ if [ "$1" = prod ]; then
     import_config
     
     if [ "$2" = init ]; then
-	init_dir "$PRODUCTION_DIR"'production'
+	init_dir "$PRODUCTION_DIR" 'production'
 
     elif [ "$2" = deploy ]; then
 	TAG="$3"
