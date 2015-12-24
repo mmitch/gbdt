@@ -70,8 +70,7 @@ EOF
 
 # empty post-deployment hook, can be overridden in ~/.gbdt
 # $1: target_dir
-# $2: branch
-# $3: environment_name
+# $2: environment_name
 post_deploy()
 {
     :
@@ -93,20 +92,18 @@ check_dir()
 }
 
 
-# check directory for a specific branch
+# check directory for the correct branch
 # TODO/FIXME: also check the repository, refs/heads/master could be anything...
 # $1: target_dir
-# $2: branch
 # return: 0 = ok, 1 = directory does not exist, 2 = directory contains no git repository, 3 = different branch (see $RET_BRANCH)
 check_branch()
 {
     DIR="$1"
-    BRANCH="$2"
 
     check_dir "$DIR" || return $?
 
     CURRENT_BRANCH="$(git -C "$DIR" symbolic-ref -q HEAD)"
-    if [ "$CURRENT_BRANCH" != "refs/heads/$BRANCH" ]; then
+    if [ "$CURRENT_BRANCH" != "refs/heads/$GIT_BRANCH" ]; then
 	RET_BRANCH="$CURRENT_BRANCH"
 	return 3
     fi
@@ -117,42 +114,38 @@ check_branch()
 
 # initialize a repository
 # $1: target_dir
-# $2: branch
-# $3: environment_name
+# $2: environment_name
 init_dir()
 {
     DIR="$1"
-    BRANCH="$2"
-    ENVIRONMENT="$3"
+    ENVIRONMENT="$2"
 
     if [ -d "$DIR"/.git ]; then
-	check_dir "$DIR" "$BRANCH" || abend  "\`$DIR' already contains a git checkout, but the current branch differs: want \`$BRANCH' but got \`$RET_BRANCH'"
-	echo "directory \`$DIR' already exists with correct branch \`$BRANCH'"
+	check_dir "$DIR" || abend  "\`$DIR' already contains a git checkout, but the current branch differs: want \`$GIT_BRANCH' but got \`$RET_BRANCH'"
+	echo "directory \`$DIR' already exists with correct branch \`$GIT_BRANCH'"
 	return 0
     fi
 
     [ -d "$DIR" ] || mkdir -p "$DIR"
 
-    git clone --branch "$BRANCH" --single-branch "$GIT_REPO" "$DIR"
+    git clone --branch "$GIT_BRANCH" --single-branch "$GIT_REPO" "$DIR"
 
-    post_deploy "$DIR" "$BRANCH" "$ENVIRONMENT"
+    post_deploy "$DIR" "$ENVIRONMENT"
 
-    echo "directory \`$DIR' initialized with branch \`$BRANCH'"
+    echo "directory \`$DIR' initialized with branch \`$GIT_BRANCH'"
 }
 
 
 # check environment and print results to stdout
 # $1: target_dir
-# $2: branch
-# $3: environment_name
+# $2: environment_name
 check_environment()
 {
     DIR="$1"
-    BRANCH="$2"
-    ENVIRONMENT="$3"
+    ENVIRONMENT="$2"
 
-    if check_dir "$DIR" "$BRANCH"; then
-	CURRENT_BRANCH="$(git -C "$DIR" symbolic-ref --short -q HEAD || echo "$BRANCH" '(detached head)')"
+    if check_dir "$DIR"; then
+	CURRENT_BRANCH="$(git -C "$DIR" symbolic-ref --short -q HEAD || echo "$GIT_BRANCH" '(detached head)')"
 	TAG="$(git -C "$DIR" describe --tags --always)"
 	STATE="branch \`$CURRENT_BRANCH' at \`$TAG'"
 
@@ -177,7 +170,7 @@ check_environment()
 	echo $ENVIRONMENT
 	echo "  state:   $STATE"
 	echo "  dir:     $DIR"
-	echo "  branch:  $BRANCH"
+	echo "  branch:  $GIT_BRANCH"
 	echo "  repo:    $GIT_REPO"
 	echo
     else
@@ -188,22 +181,20 @@ check_environment()
 
 # update environment
 # $1: target_dir
-# $2: branch
-# $3: environment_name
-# $4: ref checkout
+# $2: environment_name
+# $3: ref checkout
 update_environment()
 {
     DIR="$1"
-    BRANCH="$2"
-    ENVIRONMENT="$3"
-    REF="$4"
+    ENVIRONMENT="$2"
+    REF="$3"
 
     check_dir "$DIR" || abend "directory \`$DIR' looks fishy"
 
     git -C "$DIR" pull --ff-only
     git -C "$DIR" checkout "$REF"
 
-    post_deploy "$DIR" "$BRANCH" "$ENVIRONMENT"
+    post_deploy "$DIR" "$ENVIRONMENT"
 }
 
 
@@ -236,15 +227,15 @@ if [ "$1" = prod ]; then
     import_config
     
     if [ "$2" = init ]; then
-	init_dir "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production'
+	init_dir "$PRODUCTION_DIR"'production'
 
     elif [ "$2" = deploy ]; then
 	TAG="$3"
 	[ "$TAG" ] || abend "no <tag> given"
-	update_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production' "$TAG"
+	update_environment "$PRODUCTION_DIR" 'production' "$TAG"
 
     elif [ "$2" = status ]; then
-	check_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production'
+	check_environment "$PRODUCTION_DIR" 'production'
 
     else
 	show_help
@@ -256,19 +247,19 @@ elif [ "$1" = stage ]; then
     import_config
     
     if [ "$2" = init ]; then
-	init_dir "$STAGING_DIR" "$STAGING_BRANCH" 'staging'
+	init_dir "$STAGING_DIR" 'staging'
 
     elif [ "$2" = deploy ]; then
 	TAG="$3"
-	[ "$TAG" ] || TAG="$STAGING_BRANCH"
-	update_environment "$STAGING_DIR" "$STAGING_BRANCH" 'staging' "$TAG"
+	[ "$TAG" ] || TAG="$GIT_BRANCH"
+	update_environment "$STAGING_DIR" 'staging' "$TAG"
 
     elif [ "$2" = status ]; then
-	check_environment "$STAGING_DIR" "$STAGING_BRANCH" 'staging:'
+	check_environment "$STAGING_DIR" 'staging:'
 
     elif [ "$2" = stop ]; then
 	[ -d "$STAGING_DIR" ] || abend "staging directory does not exist"
-	check_dir "$STAGING_DIR" "$STAGING_BRANCH" || abend "staging directory looks fishy, I won't remove that"
+	check_dir "$STAGING_DIR" || abend "staging directory looks fishy, I won't remove that"
 	rm -rf "$STAGING_DIR"
 
     else
@@ -280,8 +271,8 @@ elif [ "$1" = status ]; then
 
     import_config
     
-    check_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production: '
-    check_environment "$STAGING_DIR"    "$STAGING_BRANCH"    'staging:    '
+    check_environment "$PRODUCTION_DIR" 'production: '
+    check_environment "$STAGING_DIR"    'staging:    '
 
 elif [ "$1" = tags ]; then
 

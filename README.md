@@ -49,8 +49,8 @@ how?
 
 1. Initialize a git repository containg the website (e.g. the full
    webroot with the initial `index.html` as well as all needed
-   subfolders).  The repository should have separate branches for the
-   production environment and the staging environment.
+   subfolders).  The production and staging environment access the
+   same branch in the repository, normally `master`.
 
 2. Create `~/.gbdt` containing the following: (look out, the file gets
    sourced, so don't put anything like `rm -rf` in it!)
@@ -61,39 +61,35 @@ how?
    * `PRODUCTION_DIR` - the directory where the production
      environment should be checked out, e.g. `/var/www`
 
-   * `PRODUCTION_BRANCH` - the branch to use for the production
-     environment checkout, e.g. `master`
-
    * `STAGING_DIR` - the directory where the staging
      environment should be checked out, e.g. `/var/www/staging`
      (yes, I simply use a subdirectory on the normal production
       server - after testing I can stop the staging environment)
 
-   * `STAGING_BRANCH` - the branch to use for the staging
-     environment checkout, e.g. `staging`
+   * `GIT_BRANCH` (optional) - the branch to use for the checkouts to
+     both environments (default is unset is `master`)
 
    * `post_deploy()` (optional) - a shell function to be run after
      every deployment, see this example:
 
     # post-deployment hook
     # $1: target_dir
-    # $2: branch
-    # $3: environment_name
+    # $2: environment_name
     post_deploy()
     {
-	    # disable Apache access to the .git subdirectory
+        # disable Apache access to the .git subdirectory
         cd "$1"
         chmod 700 .git
     }
 
 3. Initialize the production environment with `gbdt prod init`
 
-4. To update production, run `gbdt prod deploy <tag>`, where <tag>
-   is a git tag from the production environment's branch.  Deployments
-   to production need a tag so you can't just deploy arbitrary
-   intermediate states of development (in fact, you can propably trick
-   gbdt into deploying anything that looks like a get ref, e.g. a
-   commit hash, but then that's your problem).
+4. To update production, run `gbdt prod deploy <tag>`, where <tag> is
+   a git tag from repository.  Deployments to production need a tag so
+   you can't just deploy arbitrary intermediate states of development
+   (in fact, you can propably trick gbdt into deploying anything that
+   looks like a get rif, e.g. a commit hash, but then that's your
+   problem).
 
 5. Likewise, to deploy a tagged version to staging, use ``gbdt stage
    deploy <tag>``.  Unlike production, staging can also be pointed to
@@ -120,11 +116,9 @@ gbdt will propably evolve.
 * support branch switching for staging
   * As a developer I want so switch branches in the staging
     environment so I can showcase different features.
-  * this can already manually be done in multiple steps:
-    * `gbdt stage stop`
-    * switch STAGING_BRANCH in configuration
-    * `gbdt stage init`
   * but is it really needed? trying to live without it for now
+* support regexp filter for usable tags
+  * limit deployment to tags looking like e.g. `v\d+$'
 
 ### possible technical improvements
 
@@ -133,6 +127,7 @@ gbdt will propably evolve.
   * provide -c option to select different configuration files
 * make real use of the verbose settings
   * add more diagnostic output
+    * show annotated tag content on `gbdt status'
   * only show diagnostic output in verbose mode
 * remove init command
   * deploy command could initialize automatically
