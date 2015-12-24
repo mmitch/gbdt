@@ -49,12 +49,12 @@ usage:
   gbdt [-v] <env> init           - initialize environment with CURRENT(!) state
   gbdt [-v] <env> deploy <tag>   - deploys tagged state to environment
   gbdt [-v] <env> status         - show status of an environment
-  gbdt [-v] <env> tags           - show available <tags> in an environment
 
   gbdt [-v] stage deploy         - deploys CURRENT state to staging
   gbdt [-v] stage stop           - remove staging environment
 
   gbdt [-v] status               - show status of all environments
+  gbdt [-v] tags                 - show available <tags>
 
   <env> is an environment, see below
   <tag> is a git tag
@@ -208,16 +208,9 @@ update_environment()
 
 
 # show tags
-# $1: target_dir
-# $2: branch
 show_tags()
 {
-    DIR="$1"
-    BRANCH="$2"
-
-    check_dir "$DIR" || abend "directory \`$DIR' looks fishy"
-
-    LANG=C git -C "$DIR" log --decorate --pretty=format:%d "$BRANCH" | fgrep tag:
+    git ls-remote --tags "$GIT_REPO" | sed 's,^.*refs/tags/,,'
 }
 
 
@@ -226,6 +219,11 @@ import_config()
 {
     [ -r ~/.gbdt ] || abend "no configuration in \`~/.gbdt' found"
     source ~/.gbdt
+
+    [ "$PRODUCTION_DIR" ] || abend 'no $PRODUCTION_DIR given in config'
+    [ "$STAGING_DIR" ]    || abend 'no $STAGING_DIR given in config'
+    [ "$GIT_REPO" ]       || abend 'no $GIT_REPO given in config'
+    [ "$GIT_BRANCH" ]     || GIT_BRANCH=master
 }
 
 
@@ -248,9 +246,6 @@ if [ "$1" = prod ]; then
     elif [ "$2" = status ]; then
 	check_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production'
 
-    elif [ "$2" = tags ]; then
-	show_tags "$PRODUCTION_DIR" "$PRODUCTION_BRANCH"
-
     else
 	show_help
 
@@ -271,9 +266,6 @@ elif [ "$1" = stage ]; then
     elif [ "$2" = status ]; then
 	check_environment "$STAGING_DIR" "$STAGING_BRANCH" 'staging:'
 
-    elif [ "$2" = tags ]; then
-	show_tags "$STAGING_DIR" "$STAGING_BRANCH"
-
     elif [ "$2" = stop ]; then
 	[ -d "$STAGING_DIR" ] || abend "staging directory does not exist"
 	check_dir "$STAGING_DIR" "$STAGING_BRANCH" || abend "staging directory looks fishy, I won't remove that"
@@ -290,6 +282,12 @@ elif [ "$1" = status ]; then
     
     check_environment "$PRODUCTION_DIR" "$PRODUCTION_BRANCH" 'production: '
     check_environment "$STAGING_DIR"    "$STAGING_BRANCH"    'staging:    '
+
+elif [ "$1" = tags ]; then
+
+    import_config
+    
+    show_tags
 
 else
     show_help
