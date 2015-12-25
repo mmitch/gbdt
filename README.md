@@ -122,8 +122,6 @@ gbdt will propably evolve.
   * As a developer I want so switch branches in the staging
     environment so I can showcase different features.
   * but is it really needed? trying to live without it for now
-* support regexp filter for usable tags
-  * limit deployment to tags looking like e.g. `v\d+$'
 
 ### possible technical improvements
 
