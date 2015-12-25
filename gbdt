@@ -211,7 +211,7 @@ update_environment()
 
     check_dir "$DIR" || abend "directory \`$DIR' looks fishy"
 
-    git -C "$DIR" pull --ff-only || abend "conflicts during fast-forward-only pull"
+    git -C "$DIR" pull --ff-only "$GIT_REPO" "$GIT_BRANCH" || abend "conflicts during fast-forward-only pull"
     git -C "$DIR" checkout "$REF"
 
     post_deploy "$DIR" "$ENVIRONMENT"
