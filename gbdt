@@ -11,18 +11,20 @@
 set -e
 
 # verbose mode - initialize immediately if needed
-VERBOSE=0
+VERBOSE=
 if [ "$1" = '-vv' ]; then
     shift
-    VERBOSE=1
+    VERBOSE=2
     set -x
 fi
 if [ "$1" = '-v' ]; then
-    VERBOSE=1
     shift
     if [ "$1" = '-v' ]; then
 	set -x
+	VERBOSE=2
 	shift
+    else
+	VERBOSE=1
     fi
 fi
 
@@ -35,6 +37,15 @@ abend()
 {
     echo ERROR: "$*" >&2
     exit 1
+}
+
+# print a message to stdout only if verbose mode is active
+# $*: the message
+log_info()
+{
+    if [ $VERBOSE ]; then
+	echo "$*"
+    fi
 }
 
 
@@ -73,6 +84,7 @@ EOF
 # $2: environment_name
 post_deploy()
 {
+    log_info 'empty post_deploy() was run'
     :
 }
 
@@ -88,7 +100,7 @@ check_dir()
     [ -d "$DIR" ] || return 1
     [ -d "$DIR"/.git ] || return 2
 
-    return 0
+    log_info "check ok: \`$DIR' contains a git repository"
 }
 
 
@@ -108,7 +120,7 @@ check_branch()
 	return 3
     fi
 
-    return 0
+    log_info "check ok: \`$DIR' contains branch \`$GIT_BRANCH'"
 }
 
 
@@ -122,7 +134,7 @@ init_dir()
 
     if [ -d "$DIR"/.git ]; then
 	check_dir "$DIR" || abend  "\`$DIR' already contains a git checkout, but the current branch differs: want \`$GIT_BRANCH' but got \`$RET_BRANCH'"
-	echo "directory \`$DIR' already exists with correct branch \`$GIT_BRANCH'"
+	[ $VERBOSE ] && echo "directory \`$DIR' already exists with correct branch \`$GIT_BRANCH'"
 	return 0
     fi
 
@@ -132,7 +144,7 @@ init_dir()
 
     post_deploy "$DIR" "$ENVIRONMENT"
 
-    echo "directory \`$DIR' initialized with branch \`$GIT_BRANCH'"
+    log_info "directory \`$DIR' initialized with branch \`$GIT_BRANCH'"
 }
 
 
@@ -164,18 +176,26 @@ check_environment()
 		abend 'unknown return code from check_dir() - b0rk b0rk b0rk'
 		;;
 	esac
+	TAG=
     fi
 
-    if [ $VERBOSE = 1 ]; then
+    if [ $VERBOSE ]; then
 	echo $ENVIRONMENT
 	echo "  state:   $STATE"
 	echo "  dir:     $DIR"
 	echo "  branch:  $GIT_BRANCH"
 	echo "  repo:    $GIT_REPO"
+	if [ $TAG ]; then
+	    echo "  tag message:"
+	    echo -n "  "
+	    git -C "$DIR" tag -n9 -l "$TAG"
+	fi
 	echo
     else
 	echo "$ENVIRONMENT $STATE"
     fi
+
+    return 0
 }
 
 
@@ -191,10 +211,12 @@ update_environment()
 
     check_dir "$DIR" || abend "directory \`$DIR' looks fishy"
 
-    git -C "$DIR" pull --ff-only
+    git -C "$DIR" pull --ff-only || abend "conflicts during fast-forward-only pull"
     git -C "$DIR" checkout "$REF"
 
     post_deploy "$DIR" "$ENVIRONMENT"
+
+    log_info "$ENVIRONMENT updated to \`$REF'"
 }
 
 

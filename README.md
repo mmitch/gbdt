@@ -128,10 +128,6 @@ gbdt will propably evolve.
 * switch to getopt option parsing
   * document all options (`-vv` and `-v -v` currently missing)
   * provide -c option to select different configuration files
-* make real use of the verbose settings
-  * add more diagnostic output
-    * show annotated tag content on `gbdt status'
-  * only show diagnostic output in verbose mode
 * remove init command
   * deploy command could initialize automatically
   * this would also prevent initializing production without a proper
