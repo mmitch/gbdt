@@ -121,7 +121,7 @@ gbdt will propably evolve.
 ### possible functional improvements
 
 * support branch switching for staging
-  * As a developer I want so switch branches in the staging
+  * As a developer I want to switch branches in the staging
     environment so I can showcase different features.
   * but is it really needed? trying to live without it for now
 
