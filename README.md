@@ -1,7 +1,9 @@
 gbdt - git based deployment tool
 ================================
+
 [![Build Status](https://travis-ci.org/mmitch/gbdt.svg?branch=master)](https://travis-ci.org/mmitch/gbdt)
 [![GPL 3+](https://img.shields.io/badge/license-GPL%203%2B-blue.svg)](http://www.gnu.org/licenses/gpl-3.0-standalone.html)
+
 
 usage
 -----
@@ -46,6 +48,7 @@ support the workflow shown above.  Being more of an infrastructure
 script, gbdt will propably also work for other things than just
 websites.
 
+
 how?
 ----
 
@@ -77,17 +80,7 @@ how?
      still possible) (default if unset is `.`, matching everything)
 
    * `post_deploy()` (optional) - a shell function to be run after
-     every deployment, see this example:
-
-    # post-deployment hook
-    # $1: target_dir
-    # $2: environment_name
-    post_deploy()
-    {
-        # disable Apache access to the .git subdirectory
-        cd "$1"
-        chmod 700 .git
-    }
+     every deployment, see below
 
 3. Initialize the production environment with `gbdt prod init`
 
@@ -106,6 +99,24 @@ how?
    `gbdt stage stop`.  This is very useful for me, as the staging
    tree is located inside my production webroot and I don't want the
    staging version accessible for everyone at all times.
+
+### `post_deploy()` power
+
+To run an arbitrary deployment script, define the `post_deploy()`
+shell function in your configuration file like this:
+
+    # post-deployment hook
+    # $1: target_dir
+    # $2: environment_name
+    post_deploy()
+    {
+        # disable Apache access to the .git subdirectory
+        cd "$1"
+        chmod 700 .git
+    }
+
+You could also write logfiles, ping Feedburner for an update or send
+an email.  Sky's the limit!
 
 
 future plans
