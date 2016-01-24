@@ -8,12 +8,14 @@ if tput sgr0 >/dev/null 2>&1; then
     RED=$(tput setaf 1)
     GREEN=$(tput setaf 2)
     YELLOW=$(tput setaf 3)
+    WHITE=$(tput setaf 7)
     BOLD=$(tput bold)
     RESET=$(tput sgr0)
 else
     RED=
     GREEN=
     YELLOW=
+    WHITE=
     BOLD=
     RESET=
 fi
@@ -38,15 +40,13 @@ do_assertion()
 {
     local ENV="$1" TEXT="$2" STATE="$3"
 
-    local COLORSTATE
     if [ "$STATE" = OK ]; then
-	COLORSTATE="${GREEN}${STATE}${RESET}"
+	printf "${BOLD}${GREEN}%s${WHITE} : %-7s %s${RESET}\n" 'OK' "[$ENV]" "$TEXT"
     else
-	COLORSTATE="${RED}${STATE}${RESET}"
+	printf "${BOLD}${RED}%s${WHITE} : %-7s %s : ${RED}%s${RESET}\n" '!!' "[$ENV]" "$TEXT" "$STATE"
+	error_out
     fi
 
-    printf "${BOLD}%-7s %s : %s\n" "[$ENV]" "$TEXT" "$COLORSTATE"
-    [ "$STATE" = OK ] || error_out
 }
 
 assert_dir()
