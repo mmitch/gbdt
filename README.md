@@ -1,5 +1,7 @@
 gbdt - git based deployment tool
 ================================
+[![Build Status](https://travis-ci.org/mmitch/gbdt.svg?branch=master)](https://travis-ci.org/mmitch/gbdt)
+[![GPL 3+](https://img.shields.io/badge/license-GPL%203%2B-blue.svg)](http://www.gnu.org/licenses/gpl-3.0-standalone.html)
 
 usage
 -----
