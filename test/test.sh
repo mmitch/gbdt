@@ -171,6 +171,10 @@ assert_dir stage $SDIR
 assert_content prod  $PDIR/file 'v2'
 assert_content stage $SDIR/file 'v2'
 
+status 'TEST: combined status'
+$GBDT status | grep ^production: | grep "branch \`master' at \`v2'"
+$GBDT status | grep ^staging: | grep "branch \`master' at \`v2'"
+
 status 'TEST: roll backwards to tag'
 $GBDT prod deploy v1
 $GBDT stage deploy v1
@@ -178,6 +182,12 @@ assert_dir prod  $PDIR
 assert_dir stage $SDIR
 assert_content prod  $PDIR/file 'v1'
 assert_content stage $SDIR/file 'v1'
+
+status 'TEST: production status'
+$GBDT prod status | grep ^production: | grep "branch \`master' at \`v1'"
+
+status 'TEST: stage status'
+$GBDT stage status | grep ^staging: | grep "branch \`master' at \`v1'"
 
 status 'TEST: stage stop'
 $GBDT stage stop
