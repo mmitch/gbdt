@@ -189,6 +189,15 @@ $GBDT prod status | grep ^production: | grep "branch \`master' at \`v1'"
 status 'TEST: stage status'
 $GBDT stage status | grep ^staging: | grep "branch \`master' at \`v1'"
 
+status 'TEST: tags'
+TAGFILE=$DIR/tag.tmp
+$GBDT tags | wc -l > $TAGFILE
+assert_content tag_count $TAGFILE '2'
+$GBDT tags | grep v1 > $TAGFILE
+assert_content tag_v1 $TAGFILE 'v1'
+$GBDT tags | grep v2 > $TAGFILE
+assert_content tag_v2 $TAGFILE 'v2'
+
 status 'TEST: stage stop'
 $GBDT stage stop
 assert_nofile stage $SDIR
