@@ -1,2 +1,2 @@
 install: true
-script: (cd test; ./test.sh)
+script: git config --global user.name "TravisCI" && git config --global user.email "travisci@example.com" && (cd test; ./test.sh)
