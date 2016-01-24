@@ -260,7 +260,7 @@ if [ "$1" = prod ]; then
 	update_environment "$PRODUCTION_DIR" 'production' "$TAG"
 
     elif [ "$2" = status ]; then
-	check_environment "$PRODUCTION_DIR" 'production'
+	check_environment "$PRODUCTION_DIR" 'production:'
 
     else
 	show_help
