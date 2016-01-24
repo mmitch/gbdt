@@ -187,10 +187,13 @@ assert_content prod  $PDIR/file 'v2'
 assert_content stage $SDIR/file 'v2'
 
 status 'TEST: [prod] combined status'
-$GBDT status | grep ^production: | grep "branch \`master' at \`v2'"
+STATUSFILE=$DIR/status.tmp
+$GBDT status | grep ^production: | sed 's/^.*branch/branch/' > $STATUSFILE
+assert_content prod $STATUSFILE "branch \`master' at \`v2'"
 
 status 'TEST: [stage] combined status'
-$GBDT status | grep ^staging: | grep "branch \`master' at \`v2'"
+$GBDT status | grep ^staging: | sed 's/^.*branch/branch/' > $STATUSFILE
+assert_content prod $STATUSFILE "branch \`master' at \`v2'"
 
 status 'TEST: [stage] roll backwards to tag v1'
 $GBDT stage deploy v1
@@ -207,10 +210,12 @@ assert_content prod  $PDIR/file 'v1'
 assert_content stage $SDIR/file 'v1'
 
 status 'TEST: [prod] status'
-$GBDT prod status | grep ^production: | grep "branch \`master' at \`v1'"
+$GBDT status | grep ^production: | sed 's/^.*branch/branch/' > $STATUSFILE
+assert_content prod $STATUSFILE "branch \`master' at \`v1'"
 
 status 'TEST: [stage] status'
-$GBDT stage status | grep ^staging: | grep "branch \`master' at \`v1'"
+$GBDT status | grep ^staging: | sed 's/^.*branch/branch/' > $STATUSFILE
+assert_content prod $STATUSFILE "branch \`master' at \`v1'"
 
 status 'TEST: tags'
 TAGFILE=$DIR/tag.tmp
