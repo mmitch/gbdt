@@ -121,17 +121,32 @@ SDIR=$DIR/stage
 status 'TEST: env init'
 $GBDT prod init
 $GBDT stage init
+assert_dir prod  $PDIR
+assert_dir stage $SDIR
 PFILE=$PDIR/file
 SFILE=$SDIR/file
-assert_dir prod  $PDIR
 assert_content prod  $PDIR/file 'initial'
-assert_dir stage $SDIR
 assert_content stage $SDIR/file 'initial'
+
+status 'create two new versions with tags'
+echo 'v1' > $REPOFILE
+$GIT commit -m 'v1' $REPOFILE
+$GIT tag 'v1'
+echo 'v2' > $REPOFILE
+$GIT commit -m 'v2' $REPOFILE
+$GIT tag 'v2'
+
+status 'TEST: roll forward to tag'
+$GBDT prod deploy v2
+$GBDT stage deploy v2
+assert_dir prod  $PDIR
+assert_dir stage $SDIR
+assert_content prod  $PDIR/file 'v2'
+assert_content stage $SDIR/file 'v2'
 
 status 'TEST: stage stop'
 $GBDT stage stop
 assert_nofile stage $SDIR
-
 
 #################################################################
 
