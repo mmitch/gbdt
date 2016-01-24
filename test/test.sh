@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-DIR=`mktemp -d`
+DIR=`mktemp -d --tmpdir gbdt-unittest-XXXXXXXX`
 
 # setup colors
 if tput sgr0 >/dev/null 2>&1; then
