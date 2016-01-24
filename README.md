@@ -100,10 +100,12 @@ how?
    tree is located inside my production webroot and I don't want the
    staging version accessible for everyone at all times.
 
-### `post_deploy()` power
+### post_deploy() power
 
 To run an arbitrary deployment script, define the `post_deploy()`
 shell function in your configuration file like this:
+
+```bash
 
     # post-deployment hook
     # $1: target_dir
@@ -114,6 +116,8 @@ shell function in your configuration file like this:
         cd "$1"
         chmod 700 .git
     }
+	
+```
 
 You could also write logfiles, ping Feedburner for an update or send
 an email.  Sky's the limit!
