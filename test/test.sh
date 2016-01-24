@@ -105,7 +105,7 @@ assert_content()
 	STATE='missing file'
     fi
     
-    do_assertion "$ENV" "checking fole content \`…${TESTFILE/$DIR}'" "$STATE"
+    do_assertion "$ENV" "checking file content \`…${TESTFILE/$DIR}'" "$STATE"
 }
 
 #
