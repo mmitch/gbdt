@@ -145,12 +145,21 @@ SDIR=$DIR/stage
     echo STAGING_DIR=$SDIR
 ) > $CONFIG
 
-status 'TEST: env init'
+status 'TEST: no environment exists'
+assert_nofile prod  $PDIR
+assert_nofile stage $SDIR
+
+status 'TEST: [prod] env init'
 $GBDT prod init
+assert_dir prod  $PDIR
+assert_nofile stage $SDIR
+PFILE=$PDIR/file
+assert_content prod  $PDIR/file 'initial'
+
+status 'TEST: [stage] env init'
 $GBDT stage init
 assert_dir prod  $PDIR
 assert_dir stage $SDIR
-PFILE=$PDIR/file
 SFILE=$SDIR/file
 assert_content prod  $PDIR/file 'initial'
 assert_content stage $SDIR/file 'initial'
@@ -163,30 +172,44 @@ echo 'v2' > $REPOFILE
 $GIT commit -m 'v2' $REPOFILE
 $GIT tag 'v2'
 
-status 'TEST: roll forward to tag v2'
+status 'TEST: [prod] roll forward to tag v2'
 $GBDT prod deploy v2
+assert_dir prod  $PDIR
+assert_dir stage $SDIR
+assert_content prod  $PDIR/file 'v2'
+assert_content stage $SDIR/file 'initial'
+
+status 'TEST: [stage] roll forward to tag v2'
 $GBDT stage deploy v2
 assert_dir prod  $PDIR
 assert_dir stage $SDIR
 assert_content prod  $PDIR/file 'v2'
 assert_content stage $SDIR/file 'v2'
 
-status 'TEST: combined status'
+status 'TEST: [prod] combined status'
 $GBDT status | grep ^production: | grep "branch \`master' at \`v2'"
+
+status 'TEST: [stage] combined status'
 $GBDT status | grep ^staging: | grep "branch \`master' at \`v2'"
 
-status 'TEST: roll backwards to tag v1'
-$GBDT prod deploy v1
+status 'TEST: [stage] roll backwards to tag v1'
 $GBDT stage deploy v1
+assert_dir prod  $PDIR
+assert_dir stage $SDIR
+assert_content prod  $PDIR/file 'v2'
+assert_content stage $SDIR/file 'v1'
+
+status 'TEST: [prod] roll backwards to tag v1'
+$GBDT prod deploy v1
 assert_dir prod  $PDIR
 assert_dir stage $SDIR
 assert_content prod  $PDIR/file 'v1'
 assert_content stage $SDIR/file 'v1'
 
-status 'TEST: production status'
+status 'TEST: [prod] status'
 $GBDT prod status | grep ^production: | grep "branch \`master' at \`v1'"
 
-status 'TEST: stage status'
+status 'TEST: [stage] status'
 $GBDT stage status | grep ^staging: | grep "branch \`master' at \`v1'"
 
 status 'TEST: tags'
@@ -202,14 +225,14 @@ status 'create new commit without tag'
 echo 'v3' > $REPOFILE
 $GIT commit -m 'v3' $REPOFILE
 
-status 'TEST: stage: roll forward to newest untagged commit (v3)'
+status 'TEST: [stage] roll forward to newest untagged commit (v3)'
 $GBDT stage deploy
 assert_dir prod  $PDIR
 assert_dir stage $SDIR
 assert_content prod  $PDIR/file 'v1'
 assert_content stage $SDIR/file 'v3'
 
-status 'TEST: stage stop'
+status 'TEST: [stage] stop'
 $GBDT stage stop
 assert_nofile stage $SDIR
 
