@@ -155,7 +155,7 @@ SFILE=$SDIR/file
 assert_content prod  $PDIR/file 'initial'
 assert_content stage $SDIR/file 'initial'
 
-status 'create two new versions with tags'
+status 'create two new commits with tags'
 echo 'v1' > $REPOFILE
 $GIT commit -m 'v1' $REPOFILE
 $GIT tag 'v1'
@@ -163,7 +163,7 @@ echo 'v2' > $REPOFILE
 $GIT commit -m 'v2' $REPOFILE
 $GIT tag 'v2'
 
-status 'TEST: roll forward to tag'
+status 'TEST: roll forward to tag v2'
 $GBDT prod deploy v2
 $GBDT stage deploy v2
 assert_dir prod  $PDIR
@@ -175,7 +175,7 @@ status 'TEST: combined status'
 $GBDT status | grep ^production: | grep "branch \`master' at \`v2'"
 $GBDT status | grep ^staging: | grep "branch \`master' at \`v2'"
 
-status 'TEST: roll backwards to tag'
+status 'TEST: roll backwards to tag v1'
 $GBDT prod deploy v1
 $GBDT stage deploy v1
 assert_dir prod  $PDIR
@@ -198,11 +198,11 @@ assert_content tag_v1 $TAGFILE 'v1'
 $GBDT tags | grep v2 > $TAGFILE
 assert_content tag_v2 $TAGFILE 'v2'
 
-status 'create new version without tag'
+status 'create new commit without tag'
 echo 'v3' > $REPOFILE
 $GIT commit -m 'v3' $REPOFILE
 
-status 'TEST: stage: roll forward to newest untagged version'
+status 'TEST: stage: roll forward to newest untagged commit (v3)'
 $GBDT stage deploy
 assert_dir prod  $PDIR
 assert_dir stage $SDIR
