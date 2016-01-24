@@ -123,7 +123,7 @@ status "tempdir is \`$DIR'"
 status 'setting up test'
 CONFIG=$DIR/gbdtrc
 GBDT=$DIR/gbdt
-sed "s,~/.gbdt,$CONFIG," < ../gbdt > $GBDT
+sed "s,~/.gbdt,$CONFIG," < gbdt > $GBDT
 chmod +x $GBDT
 
 status 'initialize git'
