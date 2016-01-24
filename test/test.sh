@@ -3,18 +3,44 @@ set -e
 
 DIR=`mktemp -d`
 
+# setup colors
+if tput sgr0 >/dev/null 2>&1; then
+    RED=$(tput setaf 1)
+    GREEN=$(tput setaf 2)
+    YELLOW=$(tput setaf 3)
+    BOLD=$(tput bold)
+    RESET=$(tput sgr0)
+else
+    RED=
+    GREEN=
+    YELLOW=
+    BOLD=
+    RESET=
+fi
+
 status()
 {
-    echo ">> $@"
+    echo "${BOLD}${YELLOW}>> ${@}${RESET}"
 }
 
 error_out()
 {
-    status "test script was interrupted"
-    status "temporary directory \`$DIR' was not cleaned"
-    status "investigate and delete at your leisure"
+    status "${RED}test script was interrupted"
+    status "${RED}temporary directory \`$DIR' was not cleaned"
+    status "${RED}investigate and delete at your leisure"
     trap '' ERR
     exit 1
+}
+
+trap error_out ERR
+
+colorize_state()
+{
+    if [ "$STATE" = OK ]; then
+	COLORSTATE="${GREEN}${STATE}${RESET}"
+    else
+	COLORSTATE="${RED}${STATE}${RESET}"
+    fi
 }
 
 assert_dir()
@@ -25,15 +51,16 @@ assert_dir()
     local TESTDIR STATE
     for TESTDIR in "$@"; do
 	if [ -d "$TESTDIR" ]; then
-	    STATE='OK'
+	    STATE="OK"
 	else
 	    if [ -e "$TESTDIR" ]; then
-		STATE='file exists, but is no directory'
+		STATE="file exists, but is no directory"
 	    else
-		STATE='missing directory'
+		STATE="missing directory"
 	    fi
 	fi
-	printf "%-7s checking directory \`…%s' : %s\n" $ENV ${TESTDIR/$DIR} $STATE
+	colorize_state
+	printf "${BOLD}%-7s checking directory \`…%s' : %s\n" $ENV ${TESTDIR/$DIR} $COLORSTATE
 	[ $STATE = OK ]
     done
 }
@@ -54,7 +81,8 @@ assert_nofile()
 		STATE='unwanted file exists'
 	    fi
 	fi
-	printf "%-7s checking missing file \`…%s' : %s\n" $ENV ${TESTFILE/$DIR} $STATE
+	colorize_state
+	printf "${BOLD}%-7s checking missing file \`…%s' : %s\n" $ENV ${TESTFILE/$DIR} $COLORSTATE
 	[ $STATE = OK ]
     done
 }
@@ -75,11 +103,10 @@ assert_content()
 	STATE='missing file'
     fi
     
-    printf "%-7s checking file content \`…%s' : %s\n" $ENV ${TESTFILE/$DIR} $STATE
+    colorize_state
+    printf "${BOLD}%-7s checking file content \`…%s' : %s\n" $ENV ${TESTFILE/$DIR} $COLORSTATE
     [ $STATE = OK ]
 }
-
-trap error_out ERR
 
 #
 # missing tests:
@@ -143,6 +170,14 @@ assert_dir prod  $PDIR
 assert_dir stage $SDIR
 assert_content prod  $PDIR/file 'v2'
 assert_content stage $SDIR/file 'v2'
+
+status 'TEST: roll backwards to tag'
+$GBDT prod deploy v1
+$GBDT stage deploy v1
+assert_dir prod  $PDIR
+assert_dir stage $SDIR
+assert_content prod  $PDIR/file 'v1'
+assert_content stage $SDIR/file 'v1'
 
 status 'TEST: stage stop'
 $GBDT stage stop
