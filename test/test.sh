@@ -17,7 +17,55 @@ error_out()
     exit 1
 }
 
+assert_dir()
+{
+    local ENV="[$1]"
+    shift
+
+    local TESTDIR STATE
+    for TESTDIR in "$@"; do
+	if [ -d "$TESTDIR" ]; then
+	    STATE='OK'
+	else
+	    if [ -e "$TESTDIR" ]; then
+		STATE='file exists, but is no directory'
+	    else
+		STATE='missing directory'
+	    fi
+	fi
+	printf "%-7s checking directory \`…%s' : %s\n" $ENV ${TESTDIR/$DIR} $STATE
+	[ $STATE = OK ]
+    done
+}
+
+assert_content()
+{
+    local ENV="[$1]" TESTFILE="$2" EXPECTED="$3"
+
+    local STATE
+    if [ -e "$TESTFILE" ]; then
+	ACTUAL="$(cat "$TESTFILE")"
+	if [ "$ACTUAL" = "$EXPECTED" ]; then
+	    STATE='OK'
+	else
+	    printf -v STATE "expected content = \`%s', actual content = \`%s'" "$EXPECTED" "$ACTUAL"
+	fi
+    else
+	STATE='missing file'
+    fi
+    
+    printf "%-7s checking file content \`…%s' : %s\n" $ENV ${TESTFILE/$DIR} $STATE
+    [ $STATE = OK ]
+}
+
 trap error_out ERR
+
+#
+# missing tests:
+# - config:
+#   - GIT_BRANCH
+#   - TAG_REGEXP
+#   - post_deploy()
 
 #################################################################
 
@@ -40,7 +88,24 @@ echo 'initial' > $REPOFILE
 $GIT add $REPOFILE
 $GIT commit -m 'initial commit'
 
-status "create config"
+status 'create config'
+PDIR=$DIR/prod
+SDIR=$DIR/stage
+(
+    echo GIT_REPO=$REPO
+    echo PRODUCTION_DIR=$PDIR
+    echo STAGING_DIR=$SDIR
+) > $CONFIG
+
+status 'env init'
+$GBDT prod init
+$GBDT stage init
+assert_dir prod  $PDIR
+assert_dir stage $SDIR
+PFILE=$PDIR/file
+SFILE=$SDIR/file
+assert_content prod  $PDIR/file 'initial'
+assert_content stage $SDIR/file 'initial'
 
 #################################################################
 
