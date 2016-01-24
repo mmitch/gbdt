@@ -61,7 +61,7 @@ assert_dir()
 	fi
 	colorize_state
 	printf "${BOLD}%-7s checking directory \`…%s' : %s\n" "$ENV" "${TESTDIR/$DIR}" "$COLORSTATE"
-	[ "$STATE" = OK ]
+	[ "$STATE" = OK ] || error_out
     done
 }
 
@@ -83,7 +83,7 @@ assert_nofile()
 	fi
 	colorize_state
 	printf "${BOLD}%-7s checking missing file \`…%s' : %s\n" "$ENV" "${TESTFILE/$DIR}" "$COLORSTATE"
-	[ "$STATE" = OK ]
+	[ "$STATE" = OK ] || error_out
     done
 }
 
@@ -105,7 +105,7 @@ assert_content()
     
     colorize_state
     printf "${BOLD}%-7s checking file content \`…%s' : %s\n" "$ENV" "${TESTFILE/$DIR}" "$COLORSTATE"
-    [ "$STATE" = OK ]
+    [ "$STATE" = OK ] || error_out
 }
 
 #
