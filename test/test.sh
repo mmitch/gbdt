@@ -34,18 +34,24 @@ error_out()
 
 trap error_out ERR
 
-colorize_state()
+do_assertion()
 {
+    local ENV="$1" TEXT="$2" STATE="$3"
+
+    local COLORSTATE
     if [ "$STATE" = OK ]; then
 	COLORSTATE="${GREEN}${STATE}${RESET}"
     else
 	COLORSTATE="${RED}${STATE}${RESET}"
     fi
+
+    printf "${BOLD}%-7s %s : %s\n" "[$ENV]" "$TEXT" "$COLORSTATE"
+    [ "$STATE" = OK ] || error_out
 }
 
 assert_dir()
 {
-    local ENV="[$1]"
+    local ENV="$1"
     shift
 
     local TESTDIR STATE
@@ -59,15 +65,13 @@ assert_dir()
 		STATE="missing directory"
 	    fi
 	fi
-	colorize_state
-	printf "${BOLD}%-7s checking directory \`…%s' : %s\n" "$ENV" "${TESTDIR/$DIR}" "$COLORSTATE"
-	[ "$STATE" = OK ] || error_out
+	do_assertion "$ENV" "checking directory \`…${TESTDIR/$DIR}'" "$STATE"
     done
 }
 
 assert_nofile()
 {
-    local ENV="[$1]"
+    local ENV="$1"
     shift
 
     local TESTFILE STATE
@@ -81,15 +85,13 @@ assert_nofile()
 		STATE='unwanted file exists'
 	    fi
 	fi
-	colorize_state
-	printf "${BOLD}%-7s checking missing file \`…%s' : %s\n" "$ENV" "${TESTFILE/$DIR}" "$COLORSTATE"
-	[ "$STATE" = OK ] || error_out
+	do_assertion "$ENV" "checking missing file \`…${TESTFILE/$DIR}'" "$STATE"
     done
 }
 
 assert_content()
 {
-    local ENV="[$1]" TESTFILE="$2" EXPECTED="$3"
+    local ENV="$1" TESTFILE="$2" EXPECTED="$3"
 
     local STATE
     if [ -e "$TESTFILE" ]; then
@@ -103,9 +105,7 @@ assert_content()
 	STATE='missing file'
     fi
     
-    colorize_state
-    printf "${BOLD}%-7s checking file content \`…%s' : %s\n" "$ENV" "${TESTFILE/$DIR}" "$COLORSTATE"
-    [ "$STATE" = OK ] || error_out
+    do_assertion "$ENV" "checking fole content \`…${TESTFILE/$DIR}'" "$STATE"
 }
 
 #
