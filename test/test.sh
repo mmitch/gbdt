@@ -198,6 +198,17 @@ assert_content tag_v1 $TAGFILE 'v1'
 $GBDT tags | grep v2 > $TAGFILE
 assert_content tag_v2 $TAGFILE 'v2'
 
+status 'create new version without tag'
+echo 'v3' > $REPOFILE
+$GIT commit -m 'v3' $REPOFILE
+
+status 'TEST: stage: roll forward to newest untagged version'
+$GBDT stage deploy
+assert_dir prod  $PDIR
+assert_dir stage $SDIR
+assert_content prod  $PDIR/file 'v1'
+assert_content stage $SDIR/file 'v3'
+
 status 'TEST: stage stop'
 $GBDT stage stop
 assert_nofile stage $SDIR
