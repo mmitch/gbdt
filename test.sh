@@ -172,6 +172,15 @@ echo 'v2' > $REPOFILE
 $GIT commit -m 'v2' $REPOFILE
 $GIT tag 'v2'
 
+status 'TEST: tags'
+TAGFILE=$DIR/tag.tmp
+$GBDT tags | wc -l > $TAGFILE
+assert_content tag_count $TAGFILE '2'
+$GBDT tags | grep v1 > $TAGFILE
+assert_content tag_v1 $TAGFILE 'v1'
+$GBDT tags | grep v2 > $TAGFILE
+assert_content tag_v2 $TAGFILE 'v2'
+
 status 'TEST: [prod] roll forward to tag v2'
 $GBDT prod deploy v2
 assert_dir prod  $PDIR
@@ -216,15 +225,6 @@ assert_content prod $STATUSFILE "branch \`master' at \`v1'"
 status 'TEST: [stage] status'
 $GBDT status | grep ^staging: | sed 's/^.*branch/branch/' > $STATUSFILE
 assert_content prod $STATUSFILE "branch \`master' at \`v1'"
-
-status 'TEST: tags'
-TAGFILE=$DIR/tag.tmp
-$GBDT tags | wc -l > $TAGFILE
-assert_content tag_count $TAGFILE '2'
-$GBDT tags | grep v1 > $TAGFILE
-assert_content tag_v1 $TAGFILE 'v1'
-$GBDT tags | grep v2 > $TAGFILE
-assert_content tag_v2 $TAGFILE 'v2'
 
 status 'create new commit without tag'
 echo 'v3' > $REPOFILE
