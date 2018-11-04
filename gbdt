@@ -2,7 +2,7 @@
 #
 # gbdt - git based deployment tool
 #
-# Copyright (C) 2015  Christian Garbs <mitch@cgarbs.de>
+# Copyright (C) 2015,2018  Christian Garbs <mitch@cgarbs.de>
 # Licensed under GNU GPL v3 or later.
 #
 # see https://github.com/mmitch/gbdt
@@ -180,7 +180,7 @@ check_environment()
     fi
 
     if [ $VERBOSE ]; then
-	echo $ENVIRONMENT
+	echo "$ENVIRONMENT"
 	echo "  state:   $STATE"
 	echo "  dir:     $DIR"
 	echo "  branch:  $GIT_BRANCH"
@@ -250,10 +250,14 @@ show_tags()
 import_config()
 {
     [ -r ~/.gbdt ] || abend "no configuration in \`~/.gbdt' found"
+    # shellcheck source=/dev/null
     source ~/.gbdt
 
+    # shellcheck disable=SC2016
     [ "$PRODUCTION_DIR" ] || abend 'no $PRODUCTION_DIR given in config'
+    # shellcheck disable=SC2016
     [ "$STAGING_DIR" ]    || abend 'no $STAGING_DIR given in config'
+    # shellcheck disable=SC2016
     [ "$GIT_REPO" ]       || abend 'no $GIT_REPO given in config'
     [ "$GIT_BRANCH" ]     || GIT_BRANCH=master
     [ "$TAG_REGEXP" ]     || TAG_REGEXP=.
