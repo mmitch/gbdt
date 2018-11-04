@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-DIR=`mktemp -d --tmpdir gbdt-unittest-XXXXXXXX`
+DIR=$(mktemp -d --tmpdir gbdt-unittest-XXXXXXXX)
 
 # setup colors
 if tput sgr0 >/dev/null 2>&1; then
@@ -22,7 +22,7 @@ fi
 
 status()
 {
-    echo "${BOLD}${YELLOW}>> ${@}${RESET}"
+    echo "${BOLD}${YELLOW}>> ${*}${RESET}"
 }
 
 error_out()
@@ -123,123 +123,121 @@ status "tempdir is \`$DIR'"
 status 'setting up test'
 CONFIG=$DIR/gbdtrc
 GBDT=$DIR/gbdt
-sed "s,~/.gbdt,$CONFIG," < gbdt > $GBDT
-chmod +x $GBDT
+sed "s,~/.gbdt,$CONFIG," < gbdt > "$GBDT"
+chmod +x "$GBDT"
 
 status 'initialize git'
 REPO=$DIR/git-repo
-mkdir $REPO
+mkdir "$REPO"
 GIT="git -C $REPO"
 $GIT init
 REPOFILE=$REPO/file
-echo 'initial' > $REPOFILE
-$GIT add $REPOFILE
+echo 'initial' > "$REPOFILE"
+$GIT add "$REPOFILE"
 $GIT commit -m 'initial commit'
 
 status 'create config'
 PDIR=$DIR/prod
 SDIR=$DIR/stage
 (
-    echo GIT_REPO=$REPO
-    echo PRODUCTION_DIR=$PDIR
-    echo STAGING_DIR=$SDIR
-) > $CONFIG
+    echo GIT_REPO="$REPO"
+    echo PRODUCTION_DIR="$PDIR"
+    echo STAGING_DIR="$SDIR"
+) > "$CONFIG"
 
 status 'TEST: no environment exists'
-assert_nofile prod  $PDIR
-assert_nofile stage $SDIR
+assert_nofile prod  "$PDIR"
+assert_nofile stage "$SDIR"
 
 status 'TEST: [prod] env init'
 $GBDT prod init
-assert_dir prod  $PDIR
-assert_nofile stage $SDIR
-PFILE=$PDIR/file
-assert_content prod  $PDIR/file 'initial'
+assert_dir prod  "$PDIR"
+assert_nofile stage "$SDIR"
+assert_content prod  "$PDIR"/file 'initial'
 
 status 'TEST: [stage] env init'
 $GBDT stage init
-assert_dir prod  $PDIR
-assert_dir stage $SDIR
-SFILE=$SDIR/file
-assert_content prod  $PDIR/file 'initial'
-assert_content stage $SDIR/file 'initial'
+assert_dir prod  "$PDIR"
+assert_dir stage "$SDIR"
+assert_content prod  "$PDIR"/file 'initial'
+assert_content stage "$SDIR"/file 'initial'
 
 status 'create two new commits with tags'
-echo 'v1' > $REPOFILE
-$GIT commit -m 'v1' $REPOFILE
+echo 'v1' > "$REPOFILE"
+$GIT commit -m 'v1' "$REPOFILE"
 $GIT tag 'v1'
-echo 'v2' > $REPOFILE
-$GIT commit -m 'v2' $REPOFILE
+echo 'v2' > "$REPOFILE"
+$GIT commit -m 'v2' "$REPOFILE"
 $GIT tag 'v2'
 
 status 'TEST: tags'
 TAGFILE=$DIR/tag.tmp
-$GBDT tags | wc -l > $TAGFILE
-assert_content tag_count $TAGFILE '2'
-$GBDT tags | grep v1 > $TAGFILE
-assert_content tag_v1 $TAGFILE 'v1'
-$GBDT tags | grep v2 > $TAGFILE
-assert_content tag_v2 $TAGFILE 'v2'
+$GBDT tags | wc -l > "$TAGFILE"
+assert_content tag_count "$TAGFILE" '2'
+$GBDT tags | grep v1 > "$TAGFILE"
+assert_content tag_v1 "$TAGFILE" 'v1'
+$GBDT tags | grep v2 > "$TAGFILE"
+assert_content tag_v2 "$TAGFILE" 'v2'
 
 status 'TEST: [prod] roll forward to tag v2'
 $GBDT prod deploy v2
-assert_dir prod  $PDIR
-assert_dir stage $SDIR
-assert_content prod  $PDIR/file 'v2'
-assert_content stage $SDIR/file 'initial'
+assert_dir prod  "$PDIR"
+assert_dir stage "$SDIR"
+assert_content prod  "$PDIR"/file 'v2'
+assert_content stage "$SDIR"/file 'initial'
 
 status 'TEST: [stage] roll forward to tag v2'
 $GBDT stage deploy v2
-assert_dir prod  $PDIR
-assert_dir stage $SDIR
-assert_content prod  $PDIR/file 'v2'
-assert_content stage $SDIR/file 'v2'
+assert_dir prod  "$PDIR"
+assert_dir stage "$SDIR"
+assert_content prod  "$PDIR"/file 'v2'
+assert_content stage "$SDIR"/file 'v2'
 
 status 'TEST: [prod] combined status'
 STATUSFILE=$DIR/status.tmp
-$GBDT status | grep ^production: | sed 's/^.*branch/branch/' > $STATUSFILE
-assert_content prod $STATUSFILE "branch \`master' at \`v2'"
+$GBDT status | grep ^production: | sed 's/^.*branch/branch/' > "$STATUSFILE"
+assert_content prod "$STATUSFILE" "branch \`master' at \`v2'"
 
 status 'TEST: [stage] combined status'
-$GBDT status | grep ^staging: | sed 's/^.*branch/branch/' > $STATUSFILE
-assert_content prod $STATUSFILE "branch \`master' at \`v2'"
+$GBDT status | grep ^staging: | sed 's/^.*branch/branch/' > "$STATUSFILE"
+assert_content prod "$STATUSFILE" "branch \`master' at \`v2'"
 
 status 'TEST: [stage] roll backwards to tag v1'
 $GBDT stage deploy v1
-assert_dir prod  $PDIR
-assert_dir stage $SDIR
-assert_content prod  $PDIR/file 'v2'
-assert_content stage $SDIR/file 'v1'
+assert_dir prod  "$PDIR"
+assert_dir stage "$SDIR"
+assert_content prod  "$PDIR"/file 'v2'
+assert_content stage "$SDIR"/file 'v1'
 
 status 'TEST: [prod] roll backwards to tag v1'
 $GBDT prod deploy v1
-assert_dir prod  $PDIR
-assert_dir stage $SDIR
-assert_content prod  $PDIR/file 'v1'
-assert_content stage $SDIR/file 'v1'
+assert_dir prod  "$PDIR"
+assert_dir stage "$SDIR"
+assert_content prod  "$PDIR"/file 'v1'
+assert_content stage "$SDIR"/file 'v1'
 
 status 'TEST: [prod] status'
-$GBDT status | grep ^production: | sed 's/^.*branch/branch/' > $STATUSFILE
-assert_content prod $STATUSFILE "branch \`master' at \`v1'"
+$GBDT status | grep ^production: | sed 's/^.*branch/branch/' > "$STATUSFILE"
+assert_content prod "$STATUSFILE" "branch \`master' at \`v1'"
 
 status 'TEST: [stage] status'
-$GBDT status | grep ^staging: | sed 's/^.*branch/branch/' > $STATUSFILE
-assert_content prod $STATUSFILE "branch \`master' at \`v1'"
+$GBDT status | grep ^staging: | sed 's/^.*branch/branch/' > "$STATUSFILE"
+assert_content prod "$STATUSFILE" "branch \`master' at \`v1'"
 
 status 'create new commit without tag'
-echo 'v3' > $REPOFILE
-$GIT commit -m 'v3' $REPOFILE
+echo 'v3' > "$REPOFILE"
+$GIT commit -m 'v3' "$REPOFILE"
 
 status 'TEST: [stage] roll forward to newest untagged commit (v3)'
 $GBDT stage deploy
-assert_dir prod  $PDIR
-assert_dir stage $SDIR
-assert_content prod  $PDIR/file 'v1'
-assert_content stage $SDIR/file 'v3'
+assert_dir prod  "$PDIR"
+assert_dir stage "$SDIR"
+assert_content prod  "$PDIR"/file 'v1'
+assert_content stage "$SDIR"/file 'v3'
 
 status 'TEST: [stage] stop'
 $GBDT stage stop
-assert_nofile stage $SDIR
+assert_nofile stage "$SDIR"
 
 #################################################################
 
