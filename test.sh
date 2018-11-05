@@ -2,7 +2,7 @@
 #
 # test.sh - integration tests for gbdt
 #
-# Copyright (C) 2016,2018  Christian Garbs <mitch@cgarbs.de>
+# Copyright (C) 2016, 2018 Christian Garbs <mitch@cgarbs.de>
 # Licensed under GNU GPL v3 or later.
 #
 # This file is part of gbdt, see https://github.com/mmitch/gbdt

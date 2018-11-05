@@ -160,7 +160,7 @@ The project is hosted at https://github.com/mmitch/gbdt
 copyright
 ---------
 
-Copyright (C) 2015,2016,2018  Christian Garbs <mitch@cgarbs.de>  
+Copyright (C) 2015, 2016, 2018 Christian Garbs <mitch@cgarbs.de>  
 Licensed under GNU GPL v3 or later.
 
 gbdt is free software: you can redistribute it and/or modify
