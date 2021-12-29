@@ -75,7 +75,7 @@ how?
      both environments (default if unset is `master`)
 
    * `TAG_REGEXP` (optional) - an extended regular expression that
-     filters the tags shown on `gbdt tags' and prevents any tags not
+     filters the tags shown on `gbdt tags` and prevents any tags not
      matching to be deployed to production (deployment to staging is
      still possible) (default if unset is `.`, matching everything)
 
@@ -84,15 +84,15 @@ how?
 
 3. Initialize the production environment with `gbdt prod init`
 
-4. To update production, run `gbdt prod deploy <tag>`, where <tag> is
-   a git tag from repository.  Deployments to production need a tag so
-   you can't just deploy arbitrary intermediate states of development
-   (in fact, you can propably trick gbdt into deploying anything that
-   looks like a get rif, e.g. a commit hash, but then that's your
-   problem).
+4. To update production, run `gbdt prod deploy <tag>`, where `<tag>`
+   is a git tag from repository.  Deployments to production need a tag
+   so you can't just deploy arbitrary intermediate states of
+   development (in fact, you can propably trick gbdt into deploying
+   anything that looks like a get rif, e.g. a commit hash, but then
+   that's your problem).
 
-5. Likewise, to deploy a tagged version to staging, use ``gbdt stage
-   deploy <tag>``.  Unlike production, staging can also be pointed to
+5. Likewise, to deploy a tagged version to staging, use `gbdt stage
+   deploy <tag>`.  Unlike production, staging can also be pointed to
    the most current development version with `gbdt stage deploy`.
 
 6. After a review, the staging checkout can be thrown away with
