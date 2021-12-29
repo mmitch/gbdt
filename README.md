@@ -88,7 +88,7 @@ how?
    is a git tag from repository.  Deployments to production need a tag
    so you can't just deploy arbitrary intermediate states of
    development (in fact, you can propably trick gbdt into deploying
-   anything that looks like a get rif, e.g. a commit hash, but then
+   anything that looks like a git ref, e.g. a commit hash, but then
    that's your problem).
 
 5. Likewise, to deploy a tagged version to staging, use `gbdt stage
